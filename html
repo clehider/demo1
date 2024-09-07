@@ -1,5 +1,3 @@
-<!-- Index.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,148 +5,124 @@
     <meta charset="UTF-8">
     <title>Sistema de Inventario y Ventas</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .header {
-            background-color: #333;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-        .menu {
-            background-color: #444;
-            padding: 0.5rem;
-        }
-        .menu button {
-            background-color: #555;
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .menu button:hover {
-            background-color: #777;
-        }
-        .content {
-            padding: 2rem;
-            background-color: white;
-            margin: 1rem;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 1rem;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        input[type=text], input[type=number] {
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        #debug {
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 20px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            .report-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-.report-card {
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.report-card h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #333;
-}
-.report-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #4CAF50;
-    margin-bottom: 0;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-#settingsForm button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-#settingsForm button:hover {
-    background-color: #45a049;
-}
-.edit-form {
-            display: none;
-            margin-top: 10px;
-        }
-        .edit-form input {
-            margin-right: 10px;
-        }
-        }
+        /* ... (mantener los estilos existentes) ... */
     </style>
+    <!-- Importar Firebase -->
+    <script type="module">
+        // Importar las funciones necesarias de los SDKs de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "sistemainventarios-e6c15.firebaseapp.com",
+            databaseURL: "https://sistemainventarios-e6c1.firebaseio.com",
+            projectId: "sistemainventarios-e6c15",
+            storageBucket: "sistemainventarios-e6c1.appspot.com",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "19785403811"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Obtener una referencia a la base de datos
+        const database = getDatabase(app);
+
+        // Función para obtener el inventario
+        window.getInventory = function() {
+            const inventoryRef = ref(database, 'inventory');
+            return get(inventoryRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    return Object.entries(snapshot.val()).map(([id, data]) => ({
+                        ID: id,
+                        ...data
+                    }));
+                } else {
+                    return [];
+                }
+            });
+        }
+
+        // Función para agregar un item al inventario
+        window.addItem = function(item) {
+            const inventoryRef = ref(database, 'inventory');
+            return push(inventoryRef, item).then((newRef) => {
+                return { ...item, ID: newRef.key };
+            });
+        }
+
+        // Función para actualizar el stock de un item
+        window.updateItemStock = function(id, newStock) {
+            const itemRef = ref(database, `inventory/${id}/Stock`);
+            return set(itemRef, newStock);
+        }
+
+        // Función para eliminar un item
+        window.deleteItem = function(id) {
+            const itemRef = ref(database, `inventory/${id}`);
+            return remove(itemRef);
+        }
+
+        // Función para obtener ventas
+        window.getSales = function() {
+            const salesRef = ref(database, 'sales');
+            return get(salesRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    return Object.entries(snapshot.val()).map(([id, data]) => ({
+                        ID: id,
+                        ...data
+                    }));
+                } else {
+                    return [];
+                }
+            });
+        }
+
+        // Función para agregar una venta
+        window.addSale = function(sale) {
+            const salesRef = ref(database, 'sales');
+            return push(salesRef, sale).then((newRef) => {
+                return { ...sale, ID: newRef.key };
+            });
+        }
+
+        // Función para obtener productos en stock
+        window.getProductsInStock = function() {
+            return getInventory().then(inventory => 
+                inventory.filter(item => item.Stock > 0)
+            );
+        }
+
+        // Función para obtener reportes
+        window.getReports = function() {
+            // Implementa esta función según tus necesidades
+            // Por ahora, retornamos datos de ejemplo
+            return Promise.resolve([
+                { Tipo: "Total Ventas", Valor: 10000 },
+                { Tipo: "Productos en Stock", Valor: 50 }
+            ]);
+        }
+
+        // Función para obtener configuraciones
+        window.getSettings = function() {
+            const settingsRef = ref(database, 'settings');
+            return get(settingsRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    return snapshot.val();
+                } else {
+                    return {};
+                }
+            });
+        }
+
+        // Función para actualizar configuraciones
+        window.updateSettings = function(newSettings) {
+            const settingsRef = ref(database, 'settings');
+            return set(settingsRef, newSettings);
+        }
+    </script>
 </head>
 <body>
     <div class="header">
@@ -169,450 +143,107 @@
     <div id="debug" style="display:none;"></div>
 
     <script>
-       function showInventory() {
-            document.getElementById('mainContent').innerHTML = `
-                <h2>Inventario</h2>
-                <button onclick="loadInventory()">Cargar Inventario</button>
-                <button onclick="toggleDebug()">Mostrar/Ocultar Debug</button>
-                
-                <form id="addItemForm">
-    <input type="text" id="newNombre" placeholder="Nombre" required>
-    <input type="number" id="newStock" placeholder="Stock" required>
-    <input type="number" id="newValor" placeholder="Valor" step="0.01" required>
-    <button type="submit">Agregar Item</button>
-</form>
-
-                <div id="inventory">Cargando...</div>
-            `;
-            loadInventory();
-            setupAddItemForm();
-        }
+        // ... (mantener las funciones existentes: showInventory, showSales, showReports, showSettings) ...
 
         function loadInventory() {
             addDebug('Iniciando carga de inventario...');
             document.getElementById('inventory').innerHTML = 'Cargando inventario...';
-            google.script.run
-                .withSuccessHandler(function(result) {
+            getInventory()
+                .then(function(result) {
                     addDebug('Éxito al cargar inventario: ' + JSON.stringify(result));
                     displayInventory(result);
                 })
-                .withFailureHandler(function(error) {
+                .catch(function(error) {
                     addDebug('Error al cargar inventario: ' + error.message);
                     handleError(error);
-                })
-                .getInventory();
+                });
         }
 
-        function displayInventory(inventory) {
-            addDebug('Mostrando inventario...');
-            if (!Array.isArray(inventory) || inventory.length === 0) {
-                document.getElementById('inventory').innerHTML = 'No hay items en el inventario.';
-                return;
-            }
-            var table = '<table><tr><th>ID</th><th>Nombre</th><th>Stock</th><th>Valor</th><th>Acciones</th></tr>';
-            for (var i = 0; i < inventory.length; i++) {
-                table += '<tr>';
-                table += '<td>' + (inventory[i].ID || '') + '</td>';
-                table += '<td>' + (inventory[i].Nombre || '') + '</td>';
-                table += '<td>' + (inventory[i].Stock || '') + '</td>';
-                table += '<td>' + (inventory[i].Valor ? inventory[i].Valor.toFixed(2) : '') + '</td>';
-                table += '<td>';
-                table += '<button onclick="editItem(' + inventory[i].ID + ')">Editar</button>';
-                table += '<button onclick="deleteItem(' + inventory[i].ID + ')">Eliminar</button>';
-                table += '</td>';
-                table += '</tr>';
-                table += '<tr id="edit-form-' + inventory[i].ID + '" class="edit-form">';
-                table += '<td colspan="5">';
-                table += '<input type="number" id="edit-stock-' + inventory[i].ID + '" placeholder="Nuevo stock">';
-                table += '<button onclick="updateStock(' + inventory[i].ID + ')">Actualizar Stock</button>';
-                table += '</td>';
-                table += '</tr>';
-            }
-            table += '</table>';
-            document.getElementById('inventory').innerHTML = table;
-        }
-
-        function editItem(id) {
-            var formRow = document.getElementById('edit-form-' + id);
-            formRow.style.display = formRow.style.display === 'none' ? 'table-row' : 'none';
-        }
-
-        function updateStock(id) {
-            var newStock = document.getElementById('edit-stock-' + id).value;
-            if (newStock === '') {
-                alert('Por favor, ingrese un valor para el nuevo stock.');
-                return;
-            }
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    addDebug('Stock actualizado: ' + JSON.stringify(result));
-                    loadInventory();
-                })
-                .withFailureHandler(function(error) {
-                    addDebug('Error al actualizar stock: ' + error.message);
-                    handleError(error);
-                })
-                .updateItemStock(id, parseInt(newStock));
-        }
-
-        function deleteItem(id) {
-            if (confirm('¿Está seguro de que desea eliminar este item?')) {
-                google.script.run
-                    .withSuccessHandler(function(result) {
-                        addDebug('Item eliminado: ' + JSON.stringify(result));
-                        loadInventory();
-                    })
-                    .withFailureHandler(function(error) {
-                        addDebug('Error al eliminar item: ' + error.message);
-                        handleError(error);
-                    })
-                    .deleteItem(id);
-            }
-        }
-
-        function showSales() {
-    document.getElementById('mainContent').innerHTML = `
-        <h2>Ventas</h2>
-        <button onclick="loadSales()">Cargar Ventas</button>
-        <form id="addSaleForm">
-            <select id="productName" required>
-                <option value="">Seleccione un producto</option>
-            </select>
-            <input type="number" id="quantity" placeholder="Cantidad" required>
-            <input type="number" id="price" placeholder="Precio" step="0.01" required readonly>
-            <button type="submit">Registrar Venta</button>
-        </form>
-        <div id="salesList">Cargando ventas...</div>
-    `;
-    loadSales();
-    loadProductsInStock();
-    setupAddSaleForm();
-}
-
-function loadProductsInStock() {
-    google.script.run
-        .withSuccessHandler(function(products) {
-            const select = document.getElementById('productName');
-            products.forEach(product => {
-                const option = document.createElement('option');
-                option.value = product.Nombre;
-                option.textContent = `${product.Nombre} (Stock: ${product.Stock})`;
-                option.dataset.price = product.Valor;
-                select.appendChild(option);
-            });
-        })
-        .withFailureHandler(function(error) {
-            console.error('Error al cargar productos:', error);
-            alert('Error al cargar productos: ' + error);
-        })
-        .getProductsInStock();
-}
-
-        function showReports() {
-            document.getElementById('mainContent').innerHTML = `
-                <h2>Reportes</h2>
-                <button onclick="loadReports()">Cargar Reportes</button>
-                <div id="reports">Cargando...</div>
-            `;
-            loadReports();
-        }
-
-        function showSettings() {
-            document.getElementById('mainContent').innerHTML = `
-                <h2>Configuración</h2>
-                <button onclick="loadSettings()">Cargar Configuración</button>
-                <div id="settings">Cargando...</div>
-            `;
-            loadSettings();
-        }
-
-        function loadInventory() {
-            addDebug('Iniciando carga de inventario...');
-            document.getElementById('inventory').innerHTML = 'Cargando inventario...';
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    addDebug('Éxito al cargar inventario: ' + JSON.stringify(result));
-                    displayInventory(result);
-                })
-                .withFailureHandler(function(error) {
-                    addDebug('Error al cargar inventario: ' + error.message);
-                    handleError(error);
-                })
-                .getInventory();
-        }
-
-        function displayInventory(inventory) {
-            addDebug('Mostrando inventario...');
-            if (!Array.isArray(inventory) || inventory.length === 0) {
-                document.getElementById('inventory').innerHTML = 'No hay items en el inventario.';
-                return;
-            }
-            var table = '<table><tr><th>ID</th><th>Nombre</th><th>Stock</th><th>Valor</th></tr>';
-            for (var i = 0; i < inventory.length; i++) {
-                table += '<tr>';
-                table += '<td>' + (inventory[i].ID || '') + '</td>';
-                table += '<td>' + (inventory[i].Nombre || '') + '</td>';
-                table += '<td>' + (inventory[i].Stock || '') + '</td>';
-                table += '<td>' + (inventory[i].Valor ? inventory[i].Valor.toFixed(2) : '') + '</td>';
-                table += '</tr>';
-            }
-            table += '</table>';
-            document.getElementById('inventory').innerHTML = table;
-        }
-
-
-function validateItemData(item) {
-  if (!item.Nombre || item.Nombre.trim() === '') {
-    throw new Error('El nombre del item es requerido');
-  }
-  if (isNaN(item.Stock) || item.Stock < 0) {
-    throw new Error('El stock debe ser un número no negativo');
-  }
-  if (isNaN(item.Valor) || item.Valor < 0) {
-    throw new Error('El valor debe ser un número no negativo');
-  }
-  return true;
-}
+        // ... (mantener las funciones existentes: displayInventory, validateItemData) ...
 
         function setupAddItemForm() {
-    document.getElementById('addItemForm').onsubmit = function(e) {
-        e.preventDefault();
-        var newItem = {
-            Nombre: document.getElementById('newNombre').value,
-            Stock: parseInt(document.getElementById('newStock').value, 10),
-            Valor: parseFloat(document.getElementById('newValor').value)
-        };
-        addDebug('Agregando nuevo item: ' + JSON.stringify(newItem));
-        google.script.run
-            .withSuccessHandler(function(result) {
-                addDebug('Item agregado: ' + JSON.stringify(result));
-                addNewItemToTable(result);
-                document.getElementById('addItemForm').reset();
-            })
-            .withFailureHandler(function(error) {
-                addDebug('Error al agregar item: ' + error.message);
-                handleError(error);
-            })
-            .addItem(newItem);
-    };
-}
-
-        function addNewItemToTable(item) {
-            var table = document.querySelector('#inventory table');
-            if (!table) {
-                loadInventory();
-                return;
-            }
-            var newRow = table.insertRow(-1);
-            newRow.innerHTML = `
-                <td>${item.ID}</td>
-                <td>${item.Nombre}</td>
-                <td>${item.Stock}</td>
-                <td>${item.Valor.toFixed(2)}</td>
-            `;
+            document.getElementById('addItemForm').onsubmit = function(e) {
+                e.preventDefault();
+                var newItem = {
+                    Nombre: document.getElementById('newNombre').value,
+                    Stock: parseInt(document.getElementById('newStock').value, 10),
+                    Valor: parseFloat(document.getElementById('newValor').value)
+                };
+                addDebug('Agregando nuevo item: ' + JSON.stringify(newItem));
+                addItem(newItem)
+                    .then(function(result) {
+                        addDebug('Item agregado: ' + JSON.stringify(result));
+                        addNewItemToTable(result);
+                        document.getElementById('addItemForm').reset();
+                    })
+                    .catch(function(error) {
+                        addDebug('Error al agregar item: ' + error.message);
+                        handleError(error);
+                    });
+            };
         }
 
-       function loadSales() {
-    addDebug('Iniciando carga de ventas...');
-    document.getElementById('salesList').innerHTML = 'Cargando ventas...';
-    google.script.run
-        .withSuccessHandler(function(result) {
-            addDebug('Respuesta de getSales(): ' + JSON.stringify(result));
-            if (result === null || result === undefined) {
-                addDebug('No se recibieron datos de ventas');
-                document.getElementById('salesList').innerHTML = 'No se pudieron cargar las ventas. Por favor, verifica la conexión e inténtalo de nuevo.';
-            } else if (Array.isArray(result) && result.length === 0) {
-                addDebug('Se recibió un array vacío de ventas');
-                document.getElementById('salesList').innerHTML = 'No hay ventas para mostrar.';
-            } else {
-                addDebug('Mostrando ventas...');
-                displaySales(result);
-            }
-        })
-        .withFailureHandler(function(error) {
-            addDebug('Error al cargar ventas: ' + error.message);
-            document.getElementById('salesList').innerHTML = 'Error al cargar ventas: ' + error.message;
-        })
-        .getSales();
-}
+        // ... (mantener las funciones existentes: addNewItemToTable) ...
 
-function displaySales(sales) {
-    addDebug('Mostrando ventas...');
-    if (!Array.isArray(sales) || sales.length === 0) {
-        document.getElementById('salesList').innerHTML = 'No hay ventas para mostrar.';
-        return;
-    }
-    var table = '<table><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Fecha</th></tr>';
-    for (var i = 0; i < sales.length; i++) {
-        table += '<tr>';
-        table += '<td>' + (sales[i].ID || '') + '</td>';
-        table += '<td>' + (sales[i].Producto || '') + '</td>';
-        table += '<td>' + (sales[i].Cantidad || '') + '</td>';
-        table += '<td>' + (sales[i].Precio ? sales[i].Precio.toFixed(2) : '') + '</td>';
-        table += '<td>' + (sales[i].Total ? sales[i].Total.toFixed(2) : '') + '</td>';
-        table += '<td>' + (sales[i].Fecha ? new Date(sales[i].Fecha).toLocaleString() : '') + '</td>';
-        table += '</tr>';
-    }
-    table += '</table>';
-    document.getElementById('salesList').innerHTML = table;
-}
-        function setupAddSaleForm() {
-    const form = document.getElementById('addSaleForm');
-    const productSelect = document.getElementById('productName');
-    const quantityInput = document.getElementById('quantity');
-    const priceInput = document.getElementById('price');
-
-    productSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        priceInput.value = selectedOption.dataset.price || '';
-    });
-
-    form.onsubmit = function(e) {
-        e.preventDefault();
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const newSale = {
-            Producto: productSelect.value,
-            Cantidad: parseInt(quantityInput.value, 10),
-            Precio: parseFloat(priceInput.value)
-        };
-
-        if (newSale.Cantidad > parseInt(selectedOption.dataset.stock, 10)) {
-            alert('La cantidad excede el stock disponible');
-            return;
+        function loadSales() {
+            addDebug('Iniciando carga de ventas...');
+            document.getElementById('salesList').innerHTML = 'Cargando ventas...';
+            getSales()
+                .then(function(result) {
+                    addDebug('Respuesta de getSales(): ' + JSON.stringify(result));
+                    if (result === null || result === undefined) {
+                        addDebug('No se recibieron datos de ventas');
+                        document.getElementById('salesList').innerHTML = 'No se pudieron cargar las ventas. Por favor, verifica la conexión e inténtalo de nuevo.';
+                    } else if (Array.isArray(result) && result.length === 0) {
+                        addDebug('Se recibió un array vacío de ventas');
+                        document.getElementById('salesList').innerHTML = 'No hay ventas para mostrar.';
+                    } else {
+                        addDebug('Mostrando ventas...');
+                        displaySales(result);
+                    }
+                })
+                .catch(function(error) {
+                    addDebug('Error al cargar ventas: ' + error.message);
+                    document.getElementById('salesList').innerHTML = 'Error al cargar ventas: ' + error.message;
+                });
         }
 
-        addDebug('Agregando nueva venta: ' + JSON.stringify(newSale));
-        google.script.run
-            .withSuccessHandler(function(result) {
-                addDebug('Venta agregada: ' + JSON.stringify(result));
-                addNewSaleToTable(result);
-                form.reset();
-                loadProductsInStock(); // Recargar productos para actualizar el stock
-            })
-            .withFailureHandler(function(error) {
-                addDebug('Error al agregar venta: ' + error.message);
-                handleError(error);
-            })
-            .addSale(newSale);
-    };
-}
-
-        function addNewSaleToTable(sale) {
-            var table = document.querySelector('#salesList table');
-            if (!table) {
-                loadSales();
-                return;
-            }
-            var newRow = table.insertRow(-1);
-            newRow.innerHTML = `
-                <td>${sale.ID}</td>
-                <td>${sale.Producto}</td>
-                <td>${sale.Cantidad}</td>
-                <td>${sale.Precio.toFixed(2)}</td>
-                <td>${sale.Total.toFixed(2)}</td>
-                <td>${sale.Fecha.toLocaleString()}</td>
-            `;
-        }
+        // ... (mantener las funciones existentes: displaySales, setupAddSaleForm, addNewSaleToTable) ...
 
         function loadReports() {
-    addDebug('Iniciando carga de reportes...');
-    document.getElementById('reports').innerHTML = 'Cargando reportes...';
-    google.script.run
-        .withSuccessHandler(function(result) {
-            addDebug('Éxito al cargar reportes: ' + JSON.stringify(result));
-            displayReports(result);
-        })
-        .withFailureHandler(function(error) {
-            addDebug('Error al cargar reportes: ' + error.message);
-            document.getElementById('reports').innerHTML = 'Error al cargar reportes: ' + error.message;
-        })
-        .getReports();
-}
-        function displayReports(reports) {
-    addDebug('Mostrando reportes...');
-    if (!Array.isArray(reports) || reports.length === 0) {
-        document.getElementById('reports').innerHTML = 'No hay reportes para mostrar.';
-        return;
-    }
-    let html = '<div class="report-grid">';
-    reports.forEach(report => {
-        html += `
-            <div class="report-card">
-                <h3>${report.Tipo}</h3>
-                <p class="report-value">${typeof report.Valor === 'number' ? report.Valor.toFixed(2) : report.Valor}</p>
-            </div>
-        `;
-    });
-    html += '</div>';
-    document.getElementById('reports').innerHTML = html;
-}
-        
+            addDebug('Iniciando carga de reportes...');
+            document.getElementById('reports').innerHTML = 'Cargando reportes...';
+            getReports()
+                .then(function(result) {
+                    addDebug('Éxito al cargar reportes: ' + JSON.stringify(result));
+                    displayReports(result);
+                })
+                .catch(function(error) {
+                    addDebug('Error al cargar reportes: ' + error.message);
+                    document.getElementById('reports').innerHTML = 'Error al cargar reportes: ' + error.message;
+                });
+        }
+
+        // ... (mantener las funciones existentes: displayReports) ...
 
         function loadSettings() {
-    addDebug('Iniciando carga de configuración...');
-    document.getElementById('settings').innerHTML = 'Cargando configuración...';
-    google.script.run
-        .withSuccessHandler(function(result) {
-            addDebug('Éxito al cargar configuración: ' + JSON.stringify(result));
-            displaySettings(result);
-        })
-        .withFailureHandler(function(error) {
-            addDebug('Error al cargar configuración: ' + error.message);
-            document.getElementById('settings').innerHTML = 'Error al cargar configuración: ' + error.message;
-        })
-        .getSettings();
-}
-
-        function displaySettings(settings) {
-    addDebug('Mostrando configuración...');
-    if (!settings || Object.keys(settings).length === 0) {
-        document.getElementById('settings').innerHTML = 'No hay configuraciones para mostrar.';
-        return;
-    }
-    let html = '<form id="settingsForm">';
-    for (const [key, value] of Object.entries(settings)) {
-        html += `
-            <div class="form-group">
-                <label for="${key}">${key}:</label>
-                <input type="text" id="${key}" name="${key}" value="${value}">
-            </div>
-        `;
-    }
-    html += '<button type="submit">Guardar cambios</button>';
-    html += '</form>';
-    document.getElementById('settings').innerHTML = html;
-    
-    document.getElementById('settingsForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        updateSettings();
-    });
-}
-
-function updateSettings() {
-    const form = document.getElementById('settingsForm');
-    const newSettings = {};
-    for (const input of form.elements) {
-        if (input.name && input.name !== '') {
-            newSettings[input.name] = input.value;
+            addDebug('Iniciando carga de configuración...');
+            document.getElementById('settings').innerHTML = 'Cargando configuración...';
+            getSettings()
+                .then(function(result) {
+                    addDebug('Éxito al cargar configuración: ' + JSON.stringify(result));
+                    displaySettings(result);
+                })
+                .catch(function(error) {
+                    addDebug('Error al cargar configuración: ' + error.message);
+                    document.getElementById('settings').innerHTML = 'Error al cargar configuración: ' + error.message;
+                });
         }
-    }
-    
-    addDebug('Actualizando configuración...');
-    google.script.run
-        .withSuccessHandler(function(result) {
-            addDebug('Éxito al actualizar configuración: ' + JSON.stringify(result));
-            displaySettings(result);
-            alert('Configuración actualizada con éxito');
-        })
-        .withFailureHandler(function(error) {
-            addDebug('Error al actualizar configuración: ' + error.message);
-            alert('Error al actualizar configuración: ' + error.message);
-        })
-        .updateSettings(newSettings);
-}
+
+        // ... (mantener las funciones existentes: displaySettings, updateSettings) ...
 
         function addDebug(message) {
-                      console.log(message);
+            console.log(message);
             var debugElement = document.getElementById('debug');
             if (debugElement) {
                 debugElement.innerHTML += '<p>' + message + '</p>';
